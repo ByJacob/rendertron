@@ -36,6 +36,7 @@ export type Config = {
   reqHeaders: { [key: string]: string };
   headers: { [key: string]: string };
   puppeteerArgs: Array<string>;
+  ignoreHTTPSErrors: boolean;
   renderOnly: Array<string>;
   closeBrowser: boolean;
   restrictedUrlPattern: string | null;
@@ -49,14 +50,22 @@ export class ConfigManager {
       cacheDurationMinutes: (60 * 24).toString(),
       cacheMaxEntries: '100',
     },
-    timeout: 10000,
+    timeout: 31000,
     port: '3000',
     host: '0.0.0.0',
     width: 1000,
     height: 1000,
     reqHeaders: {},
     headers: {},
-    puppeteerArgs: ['--no-sandbox'],
+    puppeteerArgs: [
+      '--no-sandbox', 
+      '--disable-dev-shm-usage', 
+      '--disable-features=site-per-process',
+      '--disable-setuid-sandbox',
+      '--ignore-certificate-errors', 
+      // '--enable-features=NetworkService'
+    ],
+    ignoreHTTPSErrors: true,
     renderOnly: [],
     closeBrowser: false,
     restrictedUrlPattern: null

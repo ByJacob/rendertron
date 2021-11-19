@@ -1,4 +1,4 @@
-import puppeteer, { ScreenshotOptions } from 'puppeteer';
+import puppeteer, { ScreenshotOptions, Page } from 'puppeteer';
 import url from 'url';
 import { dirname } from 'path';
 
@@ -17,7 +17,6 @@ type ViewportDimensions = {
 
 const MOBILE_USERAGENT =
   'Mozilla/5.0 (Linux; Android 8.0.0; Pixel 2 XL Build/OPD1.170816.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.75 Mobile Safari/537.36';
-
 /**
  * Wraps Puppeteer's interface to Headless Chrome to expose high level rendering
  * APIs that are able to handle web components and PWAs.
@@ -33,6 +32,7 @@ export class Renderer {
 
   private restrictRequest(requestUrl: string): boolean {
     const parsedUrl = url.parse(requestUrl);
+    const sw_js_list_names = ["service-worker.js","sw.js"];
 
     if (parsedUrl.hostname && parsedUrl.hostname.match(/\.internal$/)) {
       return true;
@@ -42,8 +42,46 @@ export class Renderer {
       return true;
     }
 
+    for (const element of sw_js_list_names) {
+        if (requestUrl.includes(element)) {
+          return true;
+        }
+    }
+
     return false;
   }
+
+  private async waitTillHTMLRendered(page: Page)  {
+    const timeout = this.config.timeout
+    const checkDurationMsecs = 250;
+    const maxChecks = timeout / checkDurationMsecs;
+    let lastHTMLSize = 0;
+    let checkCounts = 1;
+    let countStableSizeIterations = 0;
+    const minStableSizeIterations = 8;
+
+    while(checkCounts++ <= maxChecks){
+      let html = await page.content();
+      let currentHTMLSize = html.length; 
+
+      let bodyHTMLSize = await page.evaluate(() => document.body.innerHTML.length);
+
+      console.log('last: ', lastHTMLSize, ' <> curr: ', currentHTMLSize, " body html size: ", bodyHTMLSize);
+
+      if(lastHTMLSize != 0 && currentHTMLSize == lastHTMLSize) 
+        countStableSizeIterations++;
+      else 
+        countStableSizeIterations = 0; //reset the counter
+
+      if(countStableSizeIterations >= minStableSizeIterations) {
+        console.log("Page rendered fully..");
+        break;
+      }
+
+      lastHTMLSize = currentHTMLSize;
+      await page.waitForTimeout(checkDurationMsecs);
+    }  
+  };
 
   async serialize(
     requestUrl: string,
@@ -128,9 +166,12 @@ export class Renderer {
     await page.setRequestInterception(true);
 
     page.on('request', (interceptedRequest: puppeteer.HTTPRequest) => {
+      console.log(interceptedRequest.url())
       if (this.restrictRequest(interceptedRequest.url())) {
+        console.log("abort")
         interceptedRequest.abort();
       } else {
+        console.log("continue")
         interceptedRequest.continue();
       }
     });
@@ -148,13 +189,23 @@ export class Renderer {
 
     try {
       // Navigate to page. Wait until there are no oustanding network requests.
+      // await client.send('ServiceWorker.enable');
+
+      const client = await page.client();
+      client.send('Network.setBypassServiceWorker', { bypass: true });
+      // await client.send('Network.clearBrowserCookies');
       response = await page.goto(requestUrl, {
         timeout: this.config.timeout,
-        waitUntil: 'networkidle0',
+        waitUntil: 'load',
       });
+      await this.waitTillHTMLRendered(page);
     } catch (e) {
       console.error(e);
     }
+
+    // if (response === null) {
+    //   response = await page.waitForResponse(() => true);
+    // }
 
     if (!response) {
       console.error('response does not exist');

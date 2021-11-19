@@ -250,6 +250,7 @@ test('whitelist ensures other urls do not get rendered', async (t: ExecutionCont
     height: 1000,
     reqHeaders: {},
     headers: {},
+    ignoreHTTPSErrors: true,
     puppeteerArgs: ['--no-sandbox'],
     renderOnly: [testBase],
     closeBrowser: false,
@@ -285,6 +286,7 @@ test('endpont for invalidating memory cache works if configured', async (t: Exec
     headers: {},
     puppeteerArgs: ['--no-sandbox'],
     renderOnly: [],
+    ignoreHTTPSErrors: true,
     closeBrowser: false,
     restrictedUrlPattern: null,
   };
@@ -327,6 +329,7 @@ test('endpont for invalidating filesystem cache works if configured', async (t: 
     host: '0.0.0.0',
     width: 1000,
     height: 1000,
+    ignoreHTTPSErrors: true,
     reqHeaders: {},
     headers: {},
     puppeteerArgs: ['--no-sandbox'],
@@ -380,6 +383,7 @@ test('http header should be set via config', async (t: ExecutionContext) => {
       Referer: 'http://example.com/',
     },
     headers: {},
+    ignoreHTTPSErrors: true,
     puppeteerArgs: ['--no-sandbox'],
     renderOnly: [],
     closeBrowser: false,
@@ -409,6 +413,7 @@ test.serial(
       reqHeaders: {
         Referer: 'http://example.com/',
       },
+      ignoreHTTPSErrors: true,
       headers: {},
       puppeteerArgs: ['--no-sandbox'],
       renderOnly: [],
@@ -463,6 +468,7 @@ test.serial(
       reqHeaders: {
         Referer: 'http://example.com/',
       },
+      ignoreHTTPSErrors: true,
       puppeteerArgs: ['--no-sandbox'],
       renderOnly: [],
       closeBrowser: false,
@@ -542,6 +548,7 @@ test('urls mathing pattern are restricted', async (t) => {
     reqHeaders: {
       Referer: 'http://example.com/',
     },
+    ignoreHTTPSErrors: true,
     puppeteerArgs: ['--no-sandbox'],
     renderOnly: [],
     closeBrowser: false,
