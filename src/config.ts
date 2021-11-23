@@ -44,13 +44,13 @@ export type Config = {
 
 export class ConfigManager {
   public static config: Config = {
-    cache: null,
+    cache: "memory",
     cacheConfig: {
       snapshotDir: path.join(os.tmpdir(), 'rendertron'),
       cacheDurationMinutes: (60 * 24).toString(),
       cacheMaxEntries: '100',
     },
-    timeout: 31000,
+    timeout: 61000,
     port: '3000',
     host: '0.0.0.0',
     width: 1000,
@@ -60,10 +60,10 @@ export class ConfigManager {
     puppeteerArgs: [
       '--no-sandbox', 
       '--disable-dev-shm-usage', 
-      '--disable-features=site-per-process',
+      // '--disable-features=site-per-process',
       '--disable-setuid-sandbox',
       '--ignore-certificate-errors', 
-      // '--enable-features=NetworkService'
+      '--enable-features=NetworkService'
     ],
     ignoreHTTPSErrors: true,
     renderOnly: [],

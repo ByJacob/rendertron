@@ -32,7 +32,6 @@ export class Renderer {
 
   private restrictRequest(requestUrl: string): boolean {
     const parsedUrl = url.parse(requestUrl);
-    const sw_js_list_names = ["service-worker.js","sw.js"];
 
     if (parsedUrl.hostname && parsedUrl.hostname.match(/\.internal$/)) {
       return true;
@@ -42,23 +41,17 @@ export class Renderer {
       return true;
     }
 
-    for (const element of sw_js_list_names) {
-        if (requestUrl.includes(element)) {
-          return true;
-        }
-    }
-
     return false;
   }
 
-  private async waitTillHTMLRendered(page: Page)  {
+  private async waitTillHTMLRendered(page: Page) {
     const timeout = this.config.timeout
     const checkDurationMsecs = 250;
     const maxChecks = timeout / checkDurationMsecs;
     let lastHTMLSize = 0;
     let checkCounts = 1;
     let countStableSizeIterations = 0;
-    const minStableSizeIterations = 8;
+    const minStableSizeIterations = 5;
 
     while(checkCounts++ <= maxChecks){
       let html = await page.content();
@@ -163,15 +156,22 @@ export class Renderer {
     page.evaluateOnNewDocument('ShadyDOM = {force: true}');
     page.evaluateOnNewDocument('ShadyCSS = {shimcssproperties: true}');
 
+    const client = await page.client();
+    client.send('Network.setBypassServiceWorker', { bypass: true });
     await page.setRequestInterception(true);
 
     page.on('request', (interceptedRequest: puppeteer.HTTPRequest) => {
-      console.log(interceptedRequest.url())
-      if (this.restrictRequest(interceptedRequest.url())) {
-        console.log("abort")
+
+      if(
+          interceptedRequest.resourceType() === 'stylesheet' 
+          || interceptedRequest.resourceType() === 'font' 
+          || interceptedRequest.resourceType() === 'image'
+        ){
+        interceptedRequest.abort();
+      }
+      else if (this.restrictRequest(interceptedRequest.url())) {
         interceptedRequest.abort();
       } else {
-        console.log("continue")
         interceptedRequest.continue();
       }
     });
@@ -189,23 +189,13 @@ export class Renderer {
 
     try {
       // Navigate to page. Wait until there are no oustanding network requests.
-      // await client.send('ServiceWorker.enable');
-
-      const client = await page.client();
-      client.send('Network.setBypassServiceWorker', { bypass: true });
-      // await client.send('Network.clearBrowserCookies');
-      response = await page.goto(requestUrl, {
-        timeout: this.config.timeout,
-        waitUntil: 'load',
-      });
+      
+      await page.goto(requestUrl);
+      response = await page.waitForResponse(()=> true)
       await this.waitTillHTMLRendered(page);
     } catch (e) {
       console.error(e);
     }
-
-    // if (response === null) {
-    //   response = await page.waitForResponse(() => true);
-    // }
 
     if (!response) {
       console.error('response does not exist');
