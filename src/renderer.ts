@@ -59,7 +59,7 @@ export class Renderer {
 
       let bodyHTMLSize = await page.evaluate(() => document.body.innerHTML.length);
 
-      console.log('last: ', lastHTMLSize, ' <> curr: ', currentHTMLSize, " body html size: ", bodyHTMLSize);
+      // console.log('last: ', lastHTMLSize, ' <> curr: ', currentHTMLSize, " body html size: ", bodyHTMLSize);
 
       if(lastHTMLSize != 0 && currentHTMLSize == lastHTMLSize) 
         countStableSizeIterations++;
@@ -67,7 +67,7 @@ export class Renderer {
         countStableSizeIterations = 0; //reset the counter
 
       if(countStableSizeIterations >= minStableSizeIterations) {
-        console.log("Page rendered fully..");
+        // console.log("Page rendered fully..");
         break;
       }
 
