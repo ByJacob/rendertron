@@ -11,7 +11,9 @@
   "types": "build/rendertron.d.ts",
   "bin": "bin/rendertron",
   "scripts": {
-    "build": "tsc",
+    "build": "npm run build-tsc && npm run copy-assets",
+    "build-tsc": "tsc",
+    "copy-assets": "cp -r ./src/assets ./build/",
     "prepack": "npm run build",
     "start": "node build/rendertron.js",
     "format": "npm run format:eslint && npm run format:prettier",

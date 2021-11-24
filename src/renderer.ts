@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 import puppeteer, { ScreenshotOptions, Page } from 'puppeteer';
 import url from 'url';
 import { dirname } from 'path';
@@ -170,9 +172,24 @@ export class Renderer {
       if(
           interceptedRequest.resourceType() === 'stylesheet' 
           || interceptedRequest.resourceType() === 'font' 
-          || interceptedRequest.resourceType() === 'image'
         ){
-        interceptedRequest.abort();
+        interceptedRequest.respond({
+          status: 200
+        });
+        // interceptedRequest.abort();
+      }
+      else if (interceptedRequest.resourceType() === 'image'){
+        // response 1x1px image, because empty response trigger onError event
+        const imageBuffer = fs.readFileSync(
+          path.join(__dirname, 'assets', 'pixel.jpeg')
+        );
+        interceptedRequest.respond(
+          {
+            status: 200,
+            contentType: 'image/jpeg',
+            body: imageBuffer,
+          }
+        );
       }
       else if (this.restrictRequest(interceptedRequest.url())) {
         interceptedRequest.abort();
