@@ -53,7 +53,7 @@ export class Renderer {
     let lastHTMLSize = 0;
     let checkCounts = 1;
     let countStableSizeIterations = 0;
-    const minStableSizeIterations = 2;
+    const minStableSizeIterations = 5;
 
     while(checkCounts++ <= maxChecks){
       let html = await page.content();

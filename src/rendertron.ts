@@ -1,6 +1,7 @@
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import koaCompress from 'koa-compress';
+import zlib from 'zlib';
 import route from 'koa-route';
 import koaSend from 'koa-send';
 import koaLogger from 'koa-logger';
@@ -47,7 +48,24 @@ export class Rendertron {
 
     this.app.use(koaLogger());
 
-    this.app.use(koaCompress());
+    this.app.use(koaCompress({
+      threshold: 2048,
+      gzip: {
+        chunkSize: 32 * 1024,
+        flush: zlib.constants.Z_SYNC_FLUSH
+      },
+      deflate: {
+        chunkSize: 32 * 1024,
+        flush: zlib.constants.Z_SYNC_FLUSH,
+      },
+      br: {
+        chunkSize: 32 * 1024,
+        params: {
+          [zlib.constants.BROTLI_PARAM_MODE]: zlib.constants.BROTLI_MODE_TEXT,
+          [zlib.constants.BROTLI_PARAM_QUALITY]: 4
+        }
+      }
+    }));
 
     this.app.use(bodyParser());
 

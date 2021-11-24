@@ -48,7 +48,7 @@ export class ConfigManager {
     cacheConfig: {
       snapshotDir: path.join(os.tmpdir(), 'rendertron'),
       cacheDurationMinutes: (60 * 24).toString(),
-      cacheMaxEntries: '100',
+      cacheMaxEntries: process.env.CACHE_MAX_ENTRIES || "3000",
     },
     timeout: 61000,
     port: '3000',
