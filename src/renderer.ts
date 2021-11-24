@@ -46,12 +46,12 @@ export class Renderer {
 
   private async waitTillHTMLRendered(page: Page) {
     const timeout = this.config.timeout
-    const checkDurationMsecs = 250;
+    const checkDurationMsecs = 200;
     const maxChecks = timeout / checkDurationMsecs;
     let lastHTMLSize = 0;
     let checkCounts = 1;
     let countStableSizeIterations = 0;
-    const minStableSizeIterations = 5;
+    const minStableSizeIterations = 2;
 
     while(checkCounts++ <= maxChecks){
       let html = await page.content();
